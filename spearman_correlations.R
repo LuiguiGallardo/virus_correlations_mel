@@ -35,7 +35,7 @@ option_list <- list(
         help = "P-value cutoff [default= %default]"
     ),
     make_option(c("-r", "--rvalue"),
-        default = 0.3,
+        default = 0.4,
         help = "Spearman's R-value cutoff [default= %default]"
     )
 )
@@ -43,6 +43,7 @@ option_list <- list(
 opt_parser <- OptionParser(option_list = option_list)
 opt <- parse_args(opt_parser)
 
+# Error message if no arguments provided
 if (is.null(opt$input)) {
     print_help(opt_parser)
     stop("At least one argument must be supplied (input file).n", call. = FALSE)
@@ -74,7 +75,9 @@ melted_cormat <- melt(matrix_cor)
 # Final filter: remove zeros, self-correlations
 final_matrix <- melted_cormat %>%
     filter(value != 0) %>%
-    filter(Var1 != Var2)
+    filter(Var1 != Var2) %>%
+    filter(grepl("k__", Var1)) %>%
+    filter(!grepl("k__", Var2))
 
 # Create output table
 write.table(final_matrix,
