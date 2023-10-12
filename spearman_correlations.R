@@ -62,15 +62,31 @@ dir.create(file.path(opt$output), showWarnings = FALSE)
 
 # Correlation matrix
 res_cor <- rcorr(t(table_transposed), type = "spearman")
+
+# R table
 matrix_cor <- res_cor$r # This is the R value matrix filter
 matrix_cor.p <- res_cor$P # This is the p-value matrix filter
 
-# Filter of R and p values
+# P value table
+matrix_cor_p_value <- res_cor$r # This is the R value matrix filter
+matrix_cor_p_value.p <- res_cor$P # This is the p-value matrix filter
+
+# Filter of R table
 matrix_cor[which(matrix_cor >= (-opt$rvalue) & matrix_cor <= opt$rvalue)] <- 0 # Filter of R (positive and negative)
 matrix_cor[which(matrix_cor.p > opt$pvalue)] <- 0 # Filter of p-value
 
-# Reshape the correlation matrix
+# Filter of pvalue table
+matrix_cor_p_value[which(matrix_cor_p_value >= (-opt$rvalue) & matrix_cor_p_value <= opt$rvalue)] <- 0 # Filter of R (positive and negative)
+matrix_cor_p_value[which(matrix_cor_p_value.p > opt$pvalue)] <- 0 # Filter of p-value
+
+# Reshape the correlation matrix, R table
 melted_cormat <- melt(matrix_cor)
+
+# Reshape the correlation matrix, pvalue table
+melted_cormat_p_value <- melt(matrix_cor_p_value.p)
+
+# Merge the pvalue column to R table
+melted_cormat$pvalue <- melted_cormat_p_value$value
 
 # Final filter: remove zeros, self-correlations
 final_matrix <- melted_cormat %>%
@@ -86,6 +102,7 @@ write.table(final_matrix,
     row.names = FALSE
 )
 
+# break 
 try(for (row in 1:nrow(final_matrix)) {
     x <- paste0(final_matrix$Var1[row])
     y <- paste0(final_matrix$Var2[row])
